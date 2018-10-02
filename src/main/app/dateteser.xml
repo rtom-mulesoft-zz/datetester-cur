@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8089" doc:name="HTTP Listener Configuration"/>
+    <flow name="dateteserFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <set-payload value="2018-01-17T12:00:00.000-07:00" mimeType="text/plain" doc:name="Set Payload"/>
+        <logger message="Original time = #[payload]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="c1f4d48e-3d43-4993-8829-710b1e661d85">
+            <dw:input-payload doc:sample="sample_data/string.dwl" mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%var chicagoTimeZone = "America/Chicago" 
+%var meterDateTimeCentral = (payload as :datetime) >> chicagoTimeZone
+%var formattedMeterDateTime = meterDateTimeCentral as :string {format: "MM/dd/yyyy HH:mm"}
+
+---
+
+{
+        "the time" : formattedMeterDateTime
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="The time in Chicago = #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
